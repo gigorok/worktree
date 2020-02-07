@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'worktree/tab_completion/cli'
+
+command_line = ENV.fetch('COMP_LINE')
+compl = Worktree::TabCompletion::CLI.new
+compl_matches = Array(compl.find_matches_for(command_line))
+puts compl_matches unless compl_matches.empty?
