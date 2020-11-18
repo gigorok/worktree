@@ -55,5 +55,12 @@ module Worktree
     def configure
       Worktree::Command::Configure.new.do!
     end
+
+    desc 'init URI', 'Initialize new worktree'
+    option :repo_path, required: true
+    def init(uri)
+      Worktree::Command::Init.new(uri,
+                                  repo_path: options[:repo_path]).do!
+    end
   end
 end
