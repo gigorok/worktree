@@ -15,22 +15,10 @@ module Worktree
         raise "Worktree #{@worktree} not found exists!" unless Dir.exist?(@worktree)
         raise 'No master repo found!' unless Dir.exist?("#{@project_dir}/master/.git")
 
-        tmux
-      end
-
-      private
-
-      def tmux
-        project_dir_name = File.expand_path(@project_dir).chomp('/').split('/').last
-        tmux_session_name = if @branch == 'master'
-                              "#{project_dir_name}-#{@branch}"
-                            else
-                              @branch
-                            end
-        Feature::Tmux.new(
+        Launcher.new(
           project_dir: @project_dir,
           branch: @branch
-        ).run!(tmux_session_name)
+        ).launch!
       end
     end
   end

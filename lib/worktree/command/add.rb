@@ -29,7 +29,10 @@ module Worktree
 
         copy_files
         clone_dbs
-        tmux
+        Launcher.new(
+          project_dir: @project_dir,
+          branch: @branch
+        ).launch!
       end
 
       private
@@ -48,14 +51,6 @@ module Worktree
             branch: @branch
           ).run! unless TTY::Prompt.new.no?('Clone development database?')
         end
-      end
-
-      def tmux
-        tmux_session_name = @branch.tr('.', '-')
-        Feature::Tmux.new(
-          project_dir: @project_dir,
-          branch: @branch
-        ).run!(tmux_session_name)
       end
 
       def git
