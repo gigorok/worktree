@@ -2,8 +2,7 @@
 
 require 'logger'
 require 'tty-command'
-# require 'active_support/all'
-require 'active_support/core_ext'
+require 'active_support/all'
 require 'git'
 require 'zeitwerk'
 
