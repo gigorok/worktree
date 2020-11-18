@@ -11,9 +11,6 @@ loader = Zeitwerk::Loader.for_gem
 loader.setup
 
 module Worktree
-  JIRA_ISSUE_ID_REGEX_TEMPLATE = ENV.fetch('JIRA_ISSUE_ID_REGEX') { '^\w\-\d+' }
-  JIRA_ISSUE_ID_REGEX = Regexp.new(JIRA_ISSUE_ID_REGEX_TEMPLATE)
-
   def logger
     return @logger if defined?(@logger)
 

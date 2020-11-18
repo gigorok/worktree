@@ -5,6 +5,9 @@ require 'jira-ruby'
 module Worktree
   module TabCompletion
     class BranchCompletion
+      JIRA_ISSUE_ID_REGEX_TEMPLATE = ENV.fetch('JIRA_ISSUE_ID_REGEX') { '^\w\-\d+' }
+      JIRA_ISSUE_ID_REGEX = Regexp.new(JIRA_ISSUE_ID_REGEX_TEMPLATE)
+
       def initialize(compl)
         @compl = compl
       end
@@ -22,7 +25,7 @@ module Worktree
       private
 
       def find_jira_issue_by(comp_line)
-        (comp_line.match(Worktree::JIRA_ISSUE_ID_REGEX) || [])[0]
+        (comp_line.match(JIRA_ISSUE_ID_REGEX) || [])[0]
       end
 
       def jira_client
