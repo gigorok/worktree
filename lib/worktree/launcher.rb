@@ -22,8 +22,14 @@ module Worktree
     def replace_vars
       {
         worktree_dir: @working_directory,
-        worktree_branch: @branch
+        worktree_branch: @branch,
+        tmux_session_name: tmux_session_name
       }
+    end
+
+    # tmux session name cannot contains . or :
+    def tmux_session_name
+      @branch.gsub(/\.|:/, '-')
     end
   end
 end
