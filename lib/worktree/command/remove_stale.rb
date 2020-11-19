@@ -4,7 +4,7 @@ module Worktree
   module Command
     class RemoveStale
       def initialize(project_dir:)
-        @project_dir = project_dir || Dir.pwd
+        @project_dir = File.expand_path project_dir || Dir.pwd
       end
 
       def do!

@@ -7,7 +7,7 @@ module Worktree
     class Init
       def initialize(uri, repo_path:)
         @uri = uri
-        @repo_path = repo_path.chomp('/')
+        @repo_path = File.expand_path repo_path
       end
 
       def do!

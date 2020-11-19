@@ -7,7 +7,7 @@ module Worktree
     class Open
       def initialize(branch, project_dir:)
         @branch = branch
-        @project_dir = project_dir || Project.resolve(branch).root
+        @project_dir = File.expand_path project_dir || Project.resolve(branch).root
         @worktree = "#{@project_dir}/#{@branch}"
       end
 

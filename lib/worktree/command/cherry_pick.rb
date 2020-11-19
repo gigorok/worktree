@@ -10,7 +10,7 @@ module Worktree
         @commit = commit[0..7] # short commit
         @branch_remote = to
         @branch = "cherry-pick-#{@commit}-to-#{@branch_remote.tr('/', '-')}"
-        @project_dir = project_dir.chomp('/')
+        @project_dir = File.expand_path project_dir
       end
 
       def do!
