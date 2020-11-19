@@ -12,7 +12,7 @@ module Worktree
       end
 
       def run!
-        @db_manager = DbManager.new("#{@project_dir}/master/config/database.yml")
+        @db_manager = DbManager.new("#{@project_dir}/#{@branch}/config/database.yml")
         @db_manager.createdb!(db_name)
 
         write!

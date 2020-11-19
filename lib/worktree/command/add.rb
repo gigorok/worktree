@@ -45,7 +45,7 @@ module Worktree
       end
 
       def clone_dbs
-        if File.exist?("#{@project_dir}/master/config/database.yml")
+        if File.exist?("#{@project_dir}/#{@branch}/config/database.yml")
           Feature::CloneDbs.new(
             project_dir: @project_dir,
             branch: @branch
