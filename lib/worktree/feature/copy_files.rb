@@ -12,12 +12,14 @@ module Worktree
       end
 
       def run!
-        project_key = Worktree::Project.project_key_for(@branch)
-        paths = Worktree::Config.config.dig('projects', project_key, 'copy_files') || []
-        paths.each { |path| copy_file(path) }
+        files_to_copy.each { |path| copy_file(path) }
       end
 
       private
+
+      def files_to_copy
+        Worktree::Project.resolve(@branch, project_dir: @project_dir).copy_files
+      end
 
       def copy_file(file)
         master_path = "#{@project_dir}/master/#{file}"
