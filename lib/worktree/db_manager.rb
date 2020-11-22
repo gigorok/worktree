@@ -6,8 +6,8 @@ module Worktree
   class DbManager
     attr_reader :spec
 
-    def initialize(config_file, environment = 'development')
-      @spec = YAML.load_file(config_file)
+    def initialize(spec_file, environment = 'development')
+      @spec = YAML.load_file(spec_file)
       @environment = environment
     end
 
@@ -27,6 +27,14 @@ module Worktree
       end
     end
 
+    def db_host
+      if multi?
+        environment_spec.dig('primary', 'host')
+      else
+        environment_spec['host']
+      end
+    end
+
     def template
       if multi?
         environment_spec.dig('primary', 'database')
@@ -37,18 +45,18 @@ module Worktree
 
     def createdb!(db_name)
       cmd = if db_port
-              "createdb -h localhost -p #{db_port} -T #{template} #{db_name}"
+              "createdb -h #{db_host} -p #{db_port} -T #{template} #{db_name}"
             else
-              "createdb -h localhost -T #{template} #{db_name}"
+              "createdb -h #{db_host} -T #{template} #{db_name}"
             end
       Worktree.run_command cmd
     end
 
     def dropdb!
       cmd = if db_port
-              "dropdb -h localhost -p #{db_port} #{template}"
+              "dropdb -h #{db_host} -p #{db_port} #{template}"
             else
-              "dropdb -h localhost #{template}"
+              "dropdb -h #{db_host} #{template}"
             end
       Worktree.run_command cmd
     end
