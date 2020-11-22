@@ -5,19 +5,17 @@ require 'tty-prompt'
 module Worktree
   module Command
     class Open
-      def initialize(branch, project_dir:)
+      def initialize(branch, project_dir:, launcher_vars: {})
         @branch = branch
         @project_dir = File.expand_path project_dir || Project.resolve(branch).root
-        @worktree = "#{@project_dir}/#{@branch}"
+        @launcher_vars = launcher_vars
       end
 
       def do!
-        raise "Worktree #{@worktree} not found exists!" unless Dir.exist?(@worktree)
-        raise 'No master repo found!' unless Dir.exist?("#{@project_dir}/master/.git")
-
         Launcher.new(
           project_dir: @project_dir,
-          branch: @branch
+          branch: @branch,
+          extra_vars: @launcher_vars
         ).launch!
       end
     end

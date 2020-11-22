@@ -2,10 +2,11 @@
 
 module Worktree
   class Launcher # :nodoc:
-    def initialize(project_dir:, branch:)
+    def initialize(project_dir:, branch:, extra_vars: {})
       @project_dir = project_dir
       @branch = branch
       @working_directory = "#{@project_dir}/#{@branch}".chomp('/')
+      @extra_vars = extra_vars.symbolize_keys
     end
 
     def launch!
@@ -16,20 +17,11 @@ module Worktree
 
     def command
       cmd = ENV.fetch('WORKTREE_LAUNCHER') { ENV.fetch('EDITOR', 'vim') }
-      format(cmd, replace_vars)
+      format(cmd, default_vars.merge(@extra_vars))
     end
 
-    def replace_vars
-      {
-        worktree_dir: @working_directory,
-        worktree_branch: @branch,
-        tmux_session_name: tmux_session_name
-      }
-    end
-
-    # tmux session name cannot contains . or :
-    def tmux_session_name
-      @branch.gsub(/\.|:/, '-')
+    def default_vars
+      { path: @working_directory, branch: @branch }
     end
   end
 end

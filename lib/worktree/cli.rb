@@ -10,19 +10,23 @@ module Worktree
     end
 
     desc 'new BRANCH', 'Create a new branch'
-    option :from, default: Worktree::Command::Add::DEFAULT_BRANCH_REMOTE
+    option :from, default: 'upstream/master'
     option :project_dir
+    option :launcher_vars, type: :hash, default: {}
     def new(branch)
       Worktree::Command::Add.new(branch,
                                  from: options[:from],
-                                 project_dir: options[:project_dir]).do!
+                                 project_dir: options[:project_dir],
+                                 launcher_vars: options[:launcher_vars]).do!
     end
 
     desc 'open BRANCH', 'Open existing worktree'
     option :project_dir
+    option :launcher_vars, type: :hash, default: {}
     def open(branch)
       Worktree::Command::Open.new(branch,
-                                  project_dir: options[:project_dir]).do!
+                                  project_dir: options[:project_dir],
+                                  launcher_vars: options[:launcher_vars]).do!
     end
 
     desc 'remove BRANCH', 'Remove branches'
@@ -45,10 +49,12 @@ module Worktree
     desc 'cherry_pick COMMIT', 'Create a new cherry pick'
     option :to, required: true
     option :project_dir, default: Dir.pwd
+    option :launcher_vars, type: :hash, default: {}
     def cherry_pick(commit)
       Worktree::Command::CherryPick.new(commit,
                                         to: options[:to],
-                                        project_dir: options[:project_dir]).do!
+                                        project_dir: options[:project_dir],
+                                        launcher_vars: options[:launcher_vars]).do!
     end
 
     desc 'configure', 'Configure worktree'

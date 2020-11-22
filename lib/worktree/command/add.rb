@@ -5,19 +5,14 @@ require 'tty-prompt'
 module Worktree
   module Command
     class Add
-      DEFAULT_BRANCH_REMOTE = 'upstream/master'
-
-      def initialize(branch, from:, project_dir:)
+      def initialize(branch, from:, project_dir:, launcher_vars: {})
         @branch = branch
         @branch_remote = from
         @project_dir = File.expand_path project_dir || Project.resolve(branch).root
-        @worktree = "#{@project_dir}/#{@branch}"
+        @launcher_vars = launcher_vars
       end
 
       def do!
-        raise "Worktree #{@worktree} already exists!" if Dir.exist?(@worktree)
-        raise 'No master repo found!' unless Dir.exist?("#{@project_dir}/master/.git")
-
         # fetch all
         # TODO: silence log while fetching remotes
         git.remotes.each { |remote| git.fetch(remote, prune: true) }
@@ -29,9 +24,11 @@ module Worktree
 
         copy_files
         clone_dbs
+
         Launcher.new(
           project_dir: @project_dir,
-          branch: @branch
+          branch: @branch,
+          extra_vars: @launcher_vars
         ).launch!
       end
 

@@ -6,17 +6,15 @@ require 'tty-prompt'
 module Worktree
   module Command
     class CherryPick
-      def initialize(commit, to:, project_dir:)
+      def initialize(commit, to:, project_dir:, launcher_vars: {})
         @commit = commit[0..7] # short commit
         @branch_remote = to
         @branch = "cherry-pick-#{@commit}-to-#{@branch_remote.tr('/', '-')}"
         @project_dir = File.expand_path project_dir
+        @launcher_vars = launcher_vars
       end
 
       def do!
-        raise "Folder #{@branch} already exists!" if Dir.exist?("#{@project_dir}/#{@branch}")
-        raise 'No master repo found!' unless Dir.exist?("#{@project_dir}/master/.git")
-
         # fetch all
         git.remotes.each(&:fetch)
 
@@ -33,7 +31,8 @@ module Worktree
         clone_dbs
         Launcher.new(
           project_dir: @project_dir,
-          branch: @branch
+          branch: @branch,
+          extra_vars: @launcher_vars
         ).launch!
       end
 
