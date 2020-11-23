@@ -12,9 +12,10 @@ module Worktree
         git.remotes.each { |remote| git.fetch(remote, prune: true) }
         git.pull('upstream', 'master')
 
-        branches = Dir.entries(@project_dir).
-          reject { |d| d == '.' || d == '..' || d == 'master' }.
-          select { |f| File.directory?(f) }
+        branches = Dir[@project_dir].
+          select { |f| File.directory?(f) }.
+          map { |f| File.basename(f) }.
+          reject { |f| f == 'master' }
 
         stale_branches = branches.select do |branch|
           git.branch('master').contains?(branch)
@@ -24,7 +25,10 @@ module Worktree
 
         stale_branches.each_with_index do |stale_branch, index|
           Worktree.logger.info { "#{index + 1} of #{stale_branches.size}" }
-          Remove.new(stale_branch, project_dir: @project_dir, update_refs: false).do!
+          Remove.new(stale_branch,
+                     project_dir: @project_dir,
+                     drop_db: true,
+                     drop_remote_branch: true).do!
         end
       end
 

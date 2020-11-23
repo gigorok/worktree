@@ -13,10 +13,14 @@ module Worktree
     option :from, default: 'upstream/master'
     option :project_dir
     option :launcher_vars, type: :hash, default: {}
+    option :clone_db, type: :boolean, default: false
+    option :fetch_remote, type: :boolean, default: true
     def new(branch)
       Worktree::Command::Add.new(branch,
                                  from: options[:from],
                                  project_dir: options[:project_dir],
+                                 clone_db: options[:clone_db],
+                                 fetch_remote: options[:fetch_remote],
                                  launcher_vars: options[:launcher_vars]).do!
     end
 
@@ -29,31 +33,35 @@ module Worktree
                                   launcher_vars: options[:launcher_vars]).do!
     end
 
-    desc 'remove BRANCH', 'Remove branches'
+    desc 'remove BRANCH', 'Remove branch'
     option :project_dir
-    def remove(*branches)
-      branches.each do |b|
-        Worktree::Command::Remove.new(b,
-                                      project_dir: options[:project_dir]).do!
-      end
+    option :drop_db, type: :boolean, default: false
+    option :drop_remote_branch, type: :boolean, default: false
+    option :check_merged, type: :boolean, default: false
+    def remove(branch)
+      Worktree::Command::Remove.new(branch,
+                                    project_dir: options[:project_dir],
+                                    drop_db: options[:drop_db],
+                                    drop_remote_branch: options[:drop_remote_branch],
+                                    check_merged: options[:check_merged]).do!
     end
 
     desc 'remove-stale', 'Remove all stale branches'
     option :project_dir
     def remove_stale
       Worktree::Command::RemoveStale.new(project_dir: options[:project_dir]).do!
-    rescue TTY::Reader::InputInterrupt
-      Worktree.logger.info { "You've interrupted removing of stale branches!" }
     end
 
     desc 'cherry_pick COMMIT', 'Create a new cherry pick'
     option :to, required: true
     option :project_dir, default: Dir.pwd
     option :launcher_vars, type: :hash, default: {}
+    option :clone_db, type: :boolean, default: false
     def cherry_pick(commit)
       Worktree::Command::CherryPick.new(commit,
                                         to: options[:to],
                                         project_dir: options[:project_dir],
+                                        clone_db: options[:clone_db],
                                         launcher_vars: options[:launcher_vars]).do!
     end
 
@@ -63,10 +71,12 @@ module Worktree
     end
 
     desc 'init URI', 'Initialize new worktree'
-    option :repo_path, required: true
+    option :path, default: Dir.pwd
+    option :remote, default: 'origin'
     def init(uri)
       Worktree::Command::Init.new(uri,
-                                  repo_path: options[:repo_path]).do!
+                                  path: options[:path],
+                                  remote: options[:remote]).do!
     end
   end
 end

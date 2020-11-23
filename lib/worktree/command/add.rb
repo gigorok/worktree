@@ -1,53 +1,38 @@
 # frozen_string_literal: true
 
-require 'tty-prompt'
-
 module Worktree
   module Command
     class Add
-      def initialize(branch, from:, project_dir:, launcher_vars: {})
+      def initialize(branch, from:, project_dir:, launcher_vars: {}, clone_db: false, fetch_remote: true)
         @branch = branch
-        @branch_remote = from
+        @from = from
         @project_dir = File.expand_path project_dir || Project.resolve(branch).root
         @launcher_vars = launcher_vars
+        @clone_db = clone_db
+        @fetch_remote = fetch_remote
       end
 
       def do!
-        # fetch all
-        # TODO: silence log while fetching remotes
-        git.remotes.each { |remote| git.fetch(remote, prune: true) }
+        # fetch git remote if allowed
+        git.fetch(remote, prune: true) if @fetch_remote
 
-        # update master
-        git.pull('upstream', 'master')
+        # create new git worktree
+        Worktree.run_command "git worktree add -b #{@branch} ../#{@branch} #{@from}", chdir: git.dir
 
-        Worktree.run_command "git worktree add -b #{@branch} ../#{@branch} #{@branch_remote}", chdir: "#{@project_dir}/master"
+        # copy files specified in configuration into new folder
+        Feature::CopyFiles.new(project_dir: @project_dir, branch: @branch).run!
 
-        copy_files
-        clone_dbs
+        # clone PG database
+        Feature::CloneDbs.new(project_dir: @project_dir, branch: @branch).run! if @clone_db
 
-        Launcher.new(
-          project_dir: @project_dir,
-          branch: @branch,
-          extra_vars: @launcher_vars
-        ).launch!
+        # launch in editor
+        Launcher.new(project_dir: @project_dir, branch: @branch, extra_vars: @launcher_vars).launch!
       end
 
       private
 
-      def copy_files
-        Feature::CopyFiles.new(
-          project_dir: @project_dir,
-          branch: @branch
-        ).run!
-      end
-
-      def clone_dbs
-        if File.exist?("#{@project_dir}/#{@branch}/config/database.yml")
-          Feature::CloneDbs.new(
-            project_dir: @project_dir,
-            branch: @branch
-          ).run! unless TTY::Prompt.new.no?('Clone development database?')
-        end
+      def remote
+        @from.split('/')[0]
       end
 
       def git

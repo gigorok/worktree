@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/gigorok/worktree'
   spec.license       = 'MIT'
 
-  spec.files = Dir['{lib,bin}/**/**']
+  spec.files         = Dir['{lib,bin}/**/**']
   spec.executables   = %w[worktree worktree_tab_completion]
   spec.require_paths = ['lib']
   spec.required_ruby_version = '>= 2.4.4'
@@ -24,7 +24,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'jira-ruby'
   spec.add_dependency 'thor'
   spec.add_dependency 'tty-command'
-  spec.add_dependency 'tty-prompt'
   spec.add_dependency 'zeitwerk'
 
   spec.add_development_dependency 'bundler'

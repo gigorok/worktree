@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
-require 'git'
-require 'tty-prompt'
-
 module Worktree
   module Command
     class CherryPick
-      def initialize(commit, to:, project_dir:, launcher_vars: {})
+      def initialize(commit, to:, project_dir:, launcher_vars: {}, clone_db: false)
         @commit = commit[0..7] # short commit
-        @branch_remote = to
-        @branch = "cherry-pick-#{@commit}-to-#{@branch_remote.tr('/', '-')}"
+        @to = to
+        @branch = "cherry-pick-#{@commit}-to-#{@to.tr('/', '-')}"
         @project_dir = File.expand_path project_dir
+        @clone_db = clone_db
         @launcher_vars = launcher_vars
       end
 
       def do!
-        # fetch all
-        git.remotes.each(&:fetch)
+        # fetch all remotes
+        git.remotes.each { |remote| git.fetch(remote, prune: true) }
 
-        Worktree.run_command "git worktree add -b #{@branch} ../#{@branch} #{@branch_remote}", chdir: "#{@project_dir}/master"
+        # create new git worktree
+        Worktree.run_command "git worktree add -b #{@branch} ../#{@branch} #{@to}", chdir: git.dir
 
+        # cherry-pick specified commit into specified branch
         begin
           Worktree.run_command "git cherry-pick #{@commit} -m 1", chdir: "#{@project_dir}/#{@branch}"
         rescue Worktree::Error => e
@@ -27,32 +27,17 @@ module Worktree
           Worktree.logger.warn { e.message }
         end
 
-        copy_files
-        clone_dbs
-        Launcher.new(
-          project_dir: @project_dir,
-          branch: @branch,
-          extra_vars: @launcher_vars
-        ).launch!
+        # copy files specified in configuration into new folder
+        Feature::CopyFiles.new(project_dir: @project_dir, branch: @branch).run!
+
+        # clone PG database
+        Feature::CloneDbs.new(project_dir: @project_dir, branch: @branch).run! if @clone_db
+
+        # launch in editor
+        Launcher.new(project_dir: @project_dir, branch: @branch, extra_vars: @launcher_vars).launch!
       end
 
       private
-
-      def copy_files
-        Feature::CopyFiles.new(
-          project_dir: @project_dir,
-          branch: @branch
-        ).run!
-      end
-
-      def clone_dbs
-        if File.exist?("#{@project_dir}/#{@branch}/config/database.yml")
-          Feature::CloneDbs.new(
-            project_dir: @project_dir,
-            branch: @branch
-          ).run! unless TTY::Prompt.new.no?('Clone development database?')
-        end
-      end
 
       def git
         @git ||= Worktree.git_for(@project_dir)

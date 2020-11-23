@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'tty-prompt'
-
 module Worktree
   module Command
     class Open
@@ -12,11 +10,7 @@ module Worktree
       end
 
       def do!
-        Launcher.new(
-          project_dir: @project_dir,
-          branch: @branch,
-          extra_vars: @launcher_vars
-        ).launch!
+        Launcher.new(project_dir: @project_dir, branch: @branch, extra_vars: @launcher_vars).launch!
       end
     end
   end

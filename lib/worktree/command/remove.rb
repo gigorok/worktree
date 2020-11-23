@@ -3,37 +3,25 @@
 module Worktree
   module Command
     class Remove
-      def initialize(branch, project_dir:, update_refs: true)
+      def initialize(branch, project_dir: nil, drop_db: false, drop_remote_branch: false, check_merged: false)
         @branch = branch
         @project_dir = File.expand_path project_dir || Project.resolve(branch).root
-        @worktree = "#{@project_dir}/#{@branch}"
-        @update_refs = update_refs
+        @drop_db = drop_db
+        @check_merged = check_merged
       end
 
       def do!
-        return unless Dir.exist?(@worktree)
-        return unless TTY::Prompt.new.yes?("Do you want to remove #{@worktree}?")
+        return if @check_merged && !git.branch('master').contains?(@branch)
 
-        # update refs
-        git.remotes.each { |remote| git.fetch(remote, prune: true) } if @update_refs
-
-        unless git.branch('master').contains?(@branch)
-          unless TTY::Prompt.new.yes?("The branch #{@branch} was not merged to master. Would you like to remove it anyway?")
-            Worktree.logger.warn { "You've skipped removing the worktree #{@worktree}" }
-            return
-          end
-        end
-
-        drop_db! if File.exist?("#{@worktree}/config/database.yml")
+        drop_db! if @drop_db
 
         # remove stale worktree
-        Worktree.run_command "git worktree remove #{@worktree} --force", chdir: "#{@project_dir}/master"
+        Worktree.run_command "git worktree remove #{@project_dir}/#{@branch} --force", chdir: git.dir
 
         # if remote branch exists then remove it also
-        if Git.ls_remote(git.dir)['remotes'].keys.include?("origin/#{@branch}")
-          if TTY::Prompt.new.yes?("Do you want to remove remote branch origin/#{@branch}?")
-            git.push('origin', @branch, delete: true)
-          end
+        if @drop_remote_branch && Git.ls_remote(git.dir)['remotes'].keys.include?("origin/#{@branch}")
+          git.push('origin', @branch, delete: true)
+          Worktree.logger.info { "Remote branch #{@branch} was deleted successfully." }
         end
 
         # remove local branch
@@ -47,9 +35,8 @@ module Worktree
         db_manager = db_manager_for(@branch)
         return if db_manager.template == db_manager_master.template
 
-        if TTY::Prompt.new.yes?("Do you want to drop database #{db_manager.template}?")
-          db_manager.dropdb!
-        end
+        db_manager.dropdb!
+        Worktree.logger.info { "Database #{db_manager.template} was dropped successfully." }
       end
 
       def db_manager_for(branch)
