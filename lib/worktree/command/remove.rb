@@ -3,6 +3,8 @@
 module Worktree
   module Command
     class Remove
+      NotMergedError = Class.new(StandardError)
+
       def initialize(branch, project_dir: nil, drop_db: false, drop_remote_branch: false, check_merged: false)
         @branch = branch
         @project_dir = File.expand_path project_dir || Project.resolve(branch).root
@@ -11,7 +13,9 @@ module Worktree
       end
 
       def do!
-        return if @check_merged && !git.branch('master').contains?(@branch)
+        if @check_merged && !git.branch('master').contains?(@branch)
+          raise NotMergedError.new("#{@branch} is not merged into master")
+        end
 
         drop_db! if @drop_db
 
@@ -26,6 +30,8 @@ module Worktree
 
         # remove local branch
         git.branch(@branch).delete
+      rescue NotMergedError => e
+        Worktree.logger.error { e }
       end
 
       private

@@ -2,22 +2,25 @@
 
 module Worktree
   module Command
-    class Init
-      def initialize(uri, path:, remote: 'origin')
+    class Init # :nodoc:
+      def initialize(uri, name:, path:, remote: 'origin')
         @uri = uri
         @path = File.expand_path path
         @remote = remote
+        @name = name || build_name
       end
 
       def do!
-        Dir.chdir @path do
-          @git = Git.clone(@uri, name, path: @repo_path, remote: @remote)
+        FileUtils.mkdir_p "#{@path}/#{@name}"
+
+        Dir.chdir "#{@path}/#{@name}" do
+          @git = Git.clone(@uri, 'master', remote: @remote, log: Worktree.logger)
         end
       end
 
       private
 
-      def name
+      def build_name
         URI(@uri).path.split('/').last[0..-5] # remove .git
       end
     end

@@ -9,7 +9,7 @@ require 'zeitwerk'
 loader = Zeitwerk::Loader.for_gem
 loader.setup
 
-module Worktree
+module Worktree # :nodoc:
   def logger
     return @logger if defined?(@logger)
 

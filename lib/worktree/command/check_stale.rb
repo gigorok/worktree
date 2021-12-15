@@ -2,7 +2,7 @@
 
 module Worktree
   module Command
-    class RemoveStale
+    class CheckStale
       def initialize(project_dir:)
         @project_dir = File.expand_path project_dir || Dir.pwd
       end
@@ -16,21 +16,11 @@ module Worktree
                    select { |f| File.directory?("#{@project_dir}/#{f}}") }.
                    reject { |f| ['master', '.', '..'].include?(f) }
 
-
         stale_branches = branches.select do |branch|
           git.branch('master').contains?(branch)
         end
 
         Worktree.logger.info { "You have #{stale_branches.size} stale branches!" }
-
-        stale_branches.each_with_index do |stale_branch, index|
-          Worktree.logger.info { "#{index + 1} of #{stale_branches.size}" }
-          Remove.new(stale_branch,
-                     project_dir: @project_dir,
-                     drop_db: true,
-                     drop_remote_branch: true,
-                     check_merged: true).do!
-        end
       end
 
       private

@@ -4,7 +4,7 @@ require 'worktree'
 require 'thor'
 
 module Worktree
-  class CLI < Thor
+  class CLI < Thor # :nodoc:
     def self.exit_on_failure?
       true
     end
@@ -46,6 +46,12 @@ module Worktree
                                     check_merged: options[:check_merged]).do!
     end
 
+    desc 'check-stale', 'Check stale branches'
+    option :project_dir
+    def check_stale
+      Worktree::Command::CheckStale.new(project_dir: options[:project_dir]).do!
+    end
+
     desc 'remove-stale', 'Remove all stale branches'
     option :project_dir
     def remove_stale
@@ -73,9 +79,11 @@ module Worktree
     desc 'init URI', 'Initialize new worktree'
     option :path, default: Dir.pwd
     option :remote, default: 'origin'
+    option :name
     def init(uri)
       Worktree::Command::Init.new(uri,
                                   path: options[:path],
+                                  name: options[:name],
                                   remote: options[:remote]).do!
     end
   end

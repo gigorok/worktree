@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Worktree
-  class Project
+  class Project # :nodoc:
     def self.resolve(branch, project_dir: nil)
       project_key = project_key_by_branch(branch)
       # try to find project key by dir (cherry-pick or open case)
@@ -29,8 +29,6 @@ module Worktree
       end
     end
 
-    private
-
     def self.project_key_by_branch(branch)
       project_keys = Worktree::Config.config['projects'].keys
       return nil if project_keys.empty?
@@ -52,5 +50,7 @@ module Worktree
       end
       project_key
     end
+
+    private_class_method :project_key_by_branch, :project_key_by_dir
   end
 end

@@ -4,8 +4,7 @@ require 'yaml'
 
 module Worktree
   module Feature
-    class CloneDbs
-
+    class CloneDbs # :nodoc:
       def initialize(project_dir:, branch:)
         @project_dir = project_dir
         @branch = branch

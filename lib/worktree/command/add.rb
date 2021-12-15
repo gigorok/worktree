@@ -2,7 +2,7 @@
 
 module Worktree
   module Command
-    class Add
+    class Add # :nodoc:
       def initialize(branch, from:, project_dir:, launcher_vars: {}, clone_db: false, fetch_remote: true)
         @branch = branch
         @from = from
